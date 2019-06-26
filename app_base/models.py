@@ -71,7 +71,7 @@ class AppCfg(models.Model):
     app_type = models.CharField(u'应用类型，例如oracle,mysql,slee等', max_length=40, null=False, blank=False)
     app_name = models.CharField(u'应用的名称,例如oracle中的实例名', max_length=40, null=False, blank=False)
     app_alias = models.CharField(u'应用的别名称,例如oracle中的别名,例如oracle中的db_unique_name', max_length=40, null=False, blank=False)
-    server_name = models.CharField(u'如果应用对外提供服务应用的服务名称,例如oracle中的别名,例如oracle中的service', max_length=40, null=True)
+    service_name = models.CharField(u'如果应用对外提供服务应用的服务名称,例如oracle中的service', max_length=40, null=True)
     base_path = models.CharField(u'应用的base路径，例如$ORACLE_HOME，通过base路径可以使用相对路径去访问文件或是执行命令', max_length=512, null=False, blank=False)
     thread_filter_regex = models.CharField(u'相关应用进程过滤正则表达式', max_length=100, null=True)
     relative_port = models.CharField(u'应用关联端口,多个端口用;分割', max_length=40, null=True)
@@ -137,7 +137,7 @@ class AppPriStbyCfg(models.Model):
     nj_agent_server = models.ForeignKey(Server, related_name='nj_agent_server')
     nj_agent_user = models.ForeignKey(ServerUser, related_name='nj_agent_user')
     tag = models.CharField(u'主备配置标签', max_length=128, null=False, blank=False)
-    availble_ip = models.CharField(u'同一网段中可以用来切换用的未被使用ip', max_length=40, null=False, blank=False)
+    available = models.CharField(u'同一网段中可以用来切换用的未被使用ip', max_length=40, null=False, blank=False)
 
     def __unicode__(self):
         return self.tag
