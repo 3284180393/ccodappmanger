@@ -82,8 +82,8 @@ def __ping_test(host_ip):
         process.kill()
     except OSError:
         pass
-    command_result = out.decode()
-#    command_result = out.decode('gbk')
+#    command_result = out.decode()
+    command_result = out.decode('gbk')
     str_info = re.compile("(\n)*$")
     command_result = str_info.sub('', command_result)
     ret['endTime'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')

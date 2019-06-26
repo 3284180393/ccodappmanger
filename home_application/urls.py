@@ -16,7 +16,7 @@ urlpatterns = patterns(
     (r'^$', 'home'),
     (r'^dev-guide/$', 'dev_guide'),
     (r'^contactus/$', 'contactus'),
-    (r'^app/getAppPriStbyCfg$', 'get_app_pri_stby_cfg'),
-    (r'^app/getAppPriStbyStatus$', 'get_app_pri_stby_status'),
-    (r'^app/start_pri_stby_switch$', 'start_pri_stby_switch$'),
+    (r'^app/priStbyCfg/(?P<platform_id>\w(\w|-|_).*\w)/(?P<app_type>\w(\w|\.).*\w)/$', 'get_app_pri_stby_cfg'),
+    (r'^app/priStbyStatus/(?P<cfg_id>\d+)/$', 'get_app_pri_stby_status'),
+    (r'^app/start_pri_stby_switch/(?P<cfg_id>\d+)/$', 'start_pri_stby_switch'),
 )

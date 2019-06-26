@@ -38,7 +38,7 @@ def contactus(request):
     return render_mako_context(request, '/home_application/contact.html')
 
 
-def get_app_pri_stby_cfg(request, platform_name, app_type):
+def get_app_pri_stby_cfg(request, platform_id, app_type):
     """
     获取某个平台的某个应用类型的所有主备配置
     :param request: http请求
@@ -46,32 +46,32 @@ def get_app_pri_stby_cfg(request, platform_name, app_type):
     :param app_type:应用类型
     :return:查询结果
     """
-    query_list = AppPriStbyCfg.objects.filter(platform__platform_name=platform_name, app_template__app_type=app_type)
+    query_list = AppPriStbyCfg.objects.filter(platform__platform_id=platform_id, app_template__app_type=app_type)
     ret_list = list()
     for cfg in query_list:
         app_cfg = dict()
         app_cfg['platform_name'] = cfg.platform.platform_name
         app_cfg['platform_id'] = cfg.platform.platform_id
-        app_cfg['app_template_id'] = cfg.app_template.app_template_id
+        app_cfg['app_template_id'] = cfg.app_template.id
         app_cfg['app_type'] = cfg.app_template.app_type
         app_cfg['domain_name'] = cfg.domain.domain_name
         app_cfg['domain_id'] = cfg.domain.domain_id
         app_cfg['nj_agent_host_ip'] = cfg.nj_agent_server.host_ip
         app_cfg['nj_agent_host_name'] = cfg.nj_agent_server.host_name
-        app_cfg['nj_agent_server_id'] = cfg.nj_agent_server.server_id
+        app_cfg['nj_agent_server_id'] = cfg.nj_agent_server.id
         app_cfg['nj_agent_user'] = cfg.nj_agent_user.login_name
         app_cfg['nj_agent_user_password'] = cfg.nj_agent_user.pass_word
-        app_cfg['nj_agent_user_id'] = cfg.nj_agent_user.server_user_id
-        app_cfg['available'] = cfg.available_ip
+        app_cfg['nj_agent_user_id'] = cfg.nj_agent_user.id
+        app_cfg['available_ip'] = cfg.available_ip
         app_cfg['primary_app_cfg'] = __get_app_config(cfg.primary_app)
         app_cfg['standby_app_cfg'] = __get_app_config(cfg.standby_app)
         ret_list.append(app_cfg)
-    return HttpResponse(json.dumps(ret_list,ensure_ascii=False),content_type="application/json,charset=utf-8")
+    return HttpResponse(json.dumps(ret_list, ensure_ascii=False), content_type="application/json,charset=utf-8")
 
 
-def get_app_pri_stby_status(request, app_pri_stby_cfg_id):
-    app_pri_stby_cfg = AppPriStbyCfg.objects.get(id=app_pri_stby_cfg_id)
-    if app_pri_stby_cfg:
+def get_app_pri_stby_status(request, cfg_id):
+    app_pri_stby_cfg = AppPriStbyCfg.objects.get(id=cfg_id)
+    if not app_pri_stby_cfg:
         return HttpResponse('错误的主备配置id', content_type="application/json,charset=utf-8")
     pri_ora_cfg = __get_app_config(app_pri_stby_cfg.primary_app)
     stby_ora_cfg = __get_app_config(app_pri_stby_cfg.standby_app)

@@ -137,7 +137,7 @@ class AppPriStbyCfg(models.Model):
     nj_agent_server = models.ForeignKey(Server, related_name='nj_agent_server')
     nj_agent_user = models.ForeignKey(ServerUser, related_name='nj_agent_user')
     tag = models.CharField(u'主备配置标签', max_length=128, null=False, blank=False)
-    available = models.CharField(u'同一网段中可以用来切换用的未被使用ip', max_length=40, null=False, blank=False)
+    available_ip = models.CharField(u'同一网段中可以用来切换用的未被使用ip', max_length=40, null=False, blank=False)
 
     def __unicode__(self):
         return self.tag
