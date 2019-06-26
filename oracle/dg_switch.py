@@ -15,8 +15,8 @@ sys.setdefaultencoding('utf8')
 LOG_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"
 logger.basicConfig(filename='my.log', level=logger.DEBUG, format=LOG_FORMAT)
 
-stby_cfg = {'app_user_password': u'oracle', 'app_type': u'oracle', 'app_name': u'ccod', 'service_name': u'db_wending', 'server_id': 1, 'host_ip': u'10.130.41.159', 'base_path': u'/home/oracle/oracle10g/product/10.2.0/oracle/db_1', 'app_template_id': 1, 'app_alias': u'WENDING', 'root_user_id': 1, 'app_user_id': 2, 'host_name': u'ccod-oracle5', 'app_cfg_id': 1, 'app_user': u'oracle', 'root_password': u'123456', 'root_user': u'root', 'ssh_port': 22}
-pri_cfg = {'app_user_password': u'oracle', 'app_type': u'oracle', 'app_name': u'ccod', 'service_name': u'db_phystdby', 'server_id': 2, 'host_ip': u'10.130.41.161', 'base_path': u'/home/oracle/oracle10g/product/10.2.0/db_1', 'app_template_id': 1, 'app_alias': u'PHYSTDBY', 'root_user_id': 3, 'app_user_id': 4, 'host_name': u'localhost','app_cfg_id': 2, 'app_user': u'oracle', 'root_password': u'123456', 'root_user': u'root', 'ssh_port': 22}
+stby_cfg = {'app_user_password': 'oracle', 'app_type': 'oracle', 'app_name': 'ccod', 'ssh_port': 22, 'service_name': 'db_wending', 'server_id': 1, 'base_path': '/home/oracle/oracle10g/product/10.2.0/oracle/db_1', 'host_ip': '10.130.41.159', 'app_alias': 'WENDING', 'root_user_id': 1, 'app_user_id': 2, 'host_name': 'localhost', 'app_cfg_id': 1, 'root_user': 'root', 'app_template_id': 1, 'app_user': 'oracle', 'root_password': '123456'}
+pri_cfg = {'app_user_password': 'oracle', 'app_type': 'oracle', 'app_name': 'ccod', 'ssh_port': 22, 'service_name': 'db_phystdby', 'server_id': 2, 'base_path': '/home/oracle/oracle10g/product/10.2.0/db_1', 'host_ip': '10.130.41.161', 'app_alias': 'PHYSTDBY', 'root_user_id': 3, 'app_user_id': 4, 'host_name': 'ccod-oracle1', 'app_cfg_id': 2, 'root_user': 'root', 'app_template_id': 1, 'app_user': 'oracle', 'root_password': '123456'}
 
 
 default_exec_command_timeout = 10
@@ -377,6 +377,7 @@ def check_dg_primary_oracle_status(pri_ora_cfg, stby_ora_cfg):
                     dg_status_ret['comment'] = err_msg
                     conn.close()
                     return dg_status_ret
+    conn.close()
     base_path = ora_cfg['base_path']
     bin_path = (base_path + "/bin/lsnrctl").replace("//", "/")
     tnsnames_path = (base_path + '/network/admin/tnsnames.ora').replace("//", "/")
@@ -385,7 +386,7 @@ def check_dg_primary_oracle_status(pri_ora_cfg, stby_ora_cfg):
         {'desc': '检查base_path配置是否配置正确', 'key': 'BASE_PATH', 'command': 'ls ' + bin_path, 'result_regex_map': {'BASE_PATH_RIGHT': '^' + bin_path + '$'}, 'accept_result': '^BASE_PATH_RIGHT$', 'timeout': False, 'depend_cond': {}, 'command_type': 'bash/shell', 'not_succ_to_break': True},
         {'desc': '检查tnsnames.ora文件存在', 'key': 'TNSNAMES_FILE', 'command': 'ls ' + tnsnames_path, 'result_regex_map': {'TNSNAMES_EXIST': '^' + tnsnames_path + '$'}, 'accept_result': '^TNSNAMES_EXIST$', 'timeout': False, 'depend_cond': {}, 'command_type': 'bash/shell', 'not_succ_to_break': False},
         {'desc': '确认tnsnames.ora中的HOST只能是ip地址', 'key': 'TNSNAMES_CFG', 'command': 'grep -v "\s*#" ' + tnsnames_path + '|grep -oP "(?<=HOST)\s*=\s*\S+\s*(?=\))"|grep -oP "(?<==).*"|grep -vP "^\s*\d+\.\d+\.\d+\.\d+\s*"', 'result_regex_map': {'TNSNAMES_CFG_HOST_USE_IP': '^$'}, 'accept_result' : '^TNSNAMES_CFG_HOST_USE_IP$', 'timeout': False, 'depend_cond': {}, 'command_type': 'bash/shell', 'not_succ_to_break': True},
-        {'desc': '确认listener.ora文件存在', 'key': 'LISTENER_FILE', 'command': 'ls ' + listener_path, 'result_regex_map': {'LISTENER_EXIST': '^' + listener_path + '$'}, 'accept_result': '^LISTENER_EXIST$', 'timeout': False, 'depend_cond': {}, 'command_type': 'bash/shell', 'not_succ_to_break': False},
+        {'desc': '确认listener.ora文件存在', 'key': 'LISTENER_FILE', 'command': 'ls ' + listener_path, 'result_regex_map': {'LISTENER_EXIST': '^' + listener_path + '$', 'LISTENER_NOT_EXIST': '^ls:.*'}, 'accept_result': '^(LISTENER_EXIST|LISTENER_NOT_EXIST)$', 'timeout': False, 'depend_cond': {}, 'command_type': 'bash/shell', 'not_succ_to_break': False},
         {'desc': '确认listener.ora的HOST没有用ip表示', 'key': 'LISTENER_CFG', 'command': 'grep -v "^\s*#" ' + listener_path + '|grep -oP "(?<=HOST)\s*=\s*\S+\s*(?=\))"|grep -oP "(?<==).*"|grep -E "^\s*(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\s*$"', 'result_regex_map': {'LISTENER_CFG_HOST_NOT_USE_IP': '^$'}, 'accept_result': '^LISTENER_CFG_HOST_NOT_USE_IP$', 'command_type': 'bash/shell', 'timeout': False, 'depend_cond': {'LISTENER_EXIST' : 'LISTENER_EXIST'}, 'not_succ_to_break': False},
         {'desc': '检查tns服务状态', 'key': 'TNS_SERVICE', 'command': 'lsnrctl status', 'result_regex_map': {'TNS_START': '.*The command completed successfully.*', 'TNS_NOT_START':'.*TNS-12541.*'}, 'accept_result': '^TNS_START$', 'timeout': False, 'depend_cond': {}, 'command_type': 'bash/shell', 'not_succ_to_break': False},
         {'desc': '检查数据库启动状态', 'key': 'DATABASE_STATUS', 'command': 'sqlplus -s / as sysdba <<EOF\nselect status,database_status from v\\$instance;\nEOF', 'result_regex_map': {'MOUNTED': '.*MOUNTED.*ACTIVE.*', 'OPEN': '.*OPEN.*ACTIVE.*', 'SHUTDOWN' : '.*ORA-01034.*'}, 'accept_result': '^OPEN$', 'timeout': False, 'depend_cond': {}, 'command_type': 'oracle/sql', 'not_succ_to_break': False},
@@ -424,7 +425,7 @@ def check_dg_primary_oracle_status(pri_ora_cfg, stby_ora_cfg):
         {'desc': '检查oracle的switchover status', 'key': 'SWITCHOVER_STATUS',
          'command': 'sqlplus -s / as sysdba <<EOF\nselect switchover_status from v\\$database;\nEOF',
          'result_regex_map': {'TO_PRIMARY': '.*TO PRIMART.*', 'TO_STANDBY': '.*TO STANDBY.*', 'SESSIONS_ACTIVE': '.*SESSIONS ACTIVE.*', 'ORA_ERROR': '.*ORA-\\d{5,5}(\\D|$)'},
-         'accept_result': '^(TO_PRIMARY|SESSIONS_ACTIVE)$',
+         'accept_result': '^(TO_STANDBY|SESSIONS_ACTIVE)$',
          'timeout': False, 'depend_cond': {}, 'command_type': 'oracle/sql', 'not_succ_to_break': False},
         {'desc': '检查oracle的archive_gap', 'key': 'ARCHIVE_GAP',
          'command': 'sqlplus -s / as sysdba <<EOF\nselect * from v\\$archive_gap;\nEOF',
@@ -433,7 +434,7 @@ def check_dg_primary_oracle_status(pri_ora_cfg, stby_ora_cfg):
          'timeout': False, 'depend_cond': {}, 'command_type': 'oracle/sql', 'not_succ_to_break': False},
         {'desc': '检查oracle的archive log', 'key': 'ARCHIVE_LOG',
          'command': 'sqlplus -s / as sysdba <<EOF\nselect (select max(SEQUENCE#) from V\\$archived_log where applied=\'NO\')-(select max(SEQUENCE#) from V\\$archived_log where applied=\'YES\')  as archived_log from dual;\nEOF',
-         'result_regex_map': {'ARCHIVE_LOG_OK': '\D(0|1)$'}, 'accept_result': '^ARCHIVE_LOG_OK$',
+         'result_regex_map': {'ARCHIVE_LOG_OK': '.*\D(0|1)$'}, 'accept_result': '^ARCHIVE_LOG_OK$',
          'command_type': 'oracle/sql', 'timeout': False, 'depend_cond': {},
          'not_succ_to_break': False},
         {'desc': '检查oracle的表空间', 'key': 'TABLE_SPACE', 'command': 'sqlplus -s / as sysdba <<EOF\nselect TABLESPACE_NAME,FILE_NAME,STATUS from dba_temp_files;\nEOF',
@@ -470,7 +471,9 @@ def check_dg_primary_oracle_status(pri_ora_cfg, stby_ora_cfg):
         dg_status_ret['comment'] = '主oracle状态检查通过'
     else:
         dg_status_ret['comment'] = err_msg
+    conn.close()
     logger.info('主oracle状态检查结果' + dg_status_ret['status'] + ':' + dg_status_ret['comment'])
+    return dg_status_ret
 
 
 def check_dg_stby_oracle_status(pri_ora_cfg, stby_ora_cfg):
@@ -531,6 +534,7 @@ def check_dg_stby_oracle_status(pri_ora_cfg, stby_ora_cfg):
                     dg_status_ret['comment'] = err_msg
                     conn.close()
                     return dg_status_ret
+    conn.close()
     base_path = ora_cfg['base_path']
     bin_path = (base_path + "/bin/lsnrctl").replace("//", "/")
     tnsnames_path = (base_path + '/network/admin/tnsnames.ora').replace("//", "/")
@@ -539,7 +543,7 @@ def check_dg_stby_oracle_status(pri_ora_cfg, stby_ora_cfg):
         {'desc': '检查base_path配置是否配置正确', 'key': 'BASE_PATH', 'command': 'ls ' + bin_path, 'result_regex_map': {'BASE_PATH_RIGHT': '^' + bin_path + '$'}, 'accept_result': '^BASE_PATH_RIGHT$', 'timeout': False, 'depend_cond': {}, 'command_type': 'bash/shell', 'not_succ_to_break': True},
         {'desc': '检查tnsnames.ora文件存在', 'key': 'TNSNAMES_FILE', 'command': 'ls ' + tnsnames_path, 'result_regex_map': {'TNSNAMES_EXIST': '^' + tnsnames_path + '$'}, 'accept_result': '^TNSNAMES_EXIST$', 'timeout': False, 'depend_cond': {}, 'command_type': 'bash/shell', 'not_succ_to_break': False},
         {'desc': '确认tnsnames.ora中的HOST只能是ip地址', 'key': 'TNSNAMES_CFG', 'command': 'grep -v "\s*#" ' + tnsnames_path + '|grep -oP "(?<=HOST)\s*=\s*\S+\s*(?=\))"|grep -oP "(?<==).*"|grep -vP "^\s*\d+\.\d+\.\d+\.\d+\s*"', 'result_regex_map': {'TNSNAMES_CFG_HOST_USE_IP': '^$'}, 'accept_result' : '^TNSNAMES_CFG_HOST_USE_IP$', 'timeout': False, 'depend_cond': {}, 'command_type': 'bash/shell', 'not_succ_to_break': True},
-        {'desc': '确认listener.ora文件存在', 'key': 'LISTENER_FILE', 'command': 'ls ' + listener_path, 'result_regex_map': {'LISTENER_EXIST': '^' + listener_path + '$'}, 'accept_result': '^LISTENER_EXIST$', 'timeout': False, 'depend_cond': {}, 'command_type': 'bash/shell', 'not_succ_to_break': False},
+        {'desc': '确认listener.ora文件存在', 'key': 'LISTENER_FILE', 'command': 'ls ' + listener_path, 'result_regex_map': {'LISTENER_EXIST': '^' + listener_path + '$', 'LISTENER_NOT_EXIST': '^ls:.*'}, 'accept_result': '^(LISTENER_EXIST|LISTENER_NOT_EXIST)$', 'timeout': False, 'depend_cond': {}, 'command_type': 'bash/shell', 'not_succ_to_break': False},
         {'desc': '确认listener.ora的HOST没有用ip表示', 'key': 'LISTENER_CFG', 'command': 'grep -v "^\s*#" ' + listener_path + '|grep -oP "(?<=HOST)\s*=\s*\S+\s*(?=\))"|grep -oP "(?<==).*"|grep -E "^\s*(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\s*$"', 'result_regex_map': {'LISTENER_CFG_HOST_NOT_USE_IP': '^$'}, 'accept_result': '^LISTENER_CFG_HOST_NOT_USE_IP$', 'command_type': 'bash/shell', 'timeout': False, 'depend_cond': {'LISTENER_EXIST' : 'LISTENER_EXIST'}, 'not_succ_to_break': False},
         {'desc': '检查tns服务状态', 'key': 'TNS_SERVICE', 'command': 'lsnrctl status', 'result_regex_map': {'TNS_START': '.*The command completed successfully.*', 'TNS_NOT_START':'.*TNS-12541.*'}, 'accept_result': '^TNS_START$', 'timeout': False, 'depend_cond': {}, 'command_type': 'bash/shell', 'not_succ_to_break': False},
         {'desc': '检查数据库启动状态', 'key': 'DATABASE_STATUS', 'command': 'sqlplus -s / as sysdba <<EOF\nselect status,database_status from v\\$instance;\nEOF', 'result_regex_map': {'MOUNTED': '.*MOUNTED.*ACTIVE.*', 'OPEN': '.*OPEN.*ACTIVE.*', 'SHUTDOWN' : '.*ORA-01034.*'}, 'accept_result': '^OPEN$', 'timeout': False, 'depend_cond': {}, 'command_type': 'oracle/sql', 'not_succ_to_break': False},
@@ -549,11 +553,11 @@ def check_dg_stby_oracle_status(pri_ora_cfg, stby_ora_cfg):
         {'desc': '检查oracle的unique name(别名)', 'key': 'UNIQUE_NAME', 'command': 'sqlplus -s / as sysdba <<EOF\nselect value from v\\$parameter where name=\'db_unique_name\';\nEOF',
          'result_regex_map': {'UNIQUE_NAME_RIGHT': '.*' + ora_cfg['app_alias'] + '.*'}, 'accept_result': '^UNIQUE_NAME_RIGHT$',
          'timeout': False, 'depend_cond': {}, 'command_type': 'bash/shell', 'not_succ_to_break': False},
-        {'desc': '检查主库配置的备库的DB_UNIQUE_NAME是否和备库的unique name一致', 'key': 'DB_UNIQUE_NAME',
+        {'desc': '检查备库配置的备库的DB_UNIQUE_NAME是否和主库的unique name一致', 'key': 'DB_UNIQUE_NAME',
          'command': 'sqlplus -s / as sysdba <<EOF\nselect value from v\\$parameter where name=\'log_archive_dest_2\';\nEOF',
          'result_regex_map': {'DB_UNIQUE_NAME_RIGHT': '.*(DB_UNIQUE_NAME|db_unique_name)=' + rltd_ora_cfg['app_alias'] + '(\s|$)'}, 'accept_result': '^DB_UNIQUE_NAME_RIGHT$',
          'timeout': False, 'depend_cond': {}, 'command_type': 'oracle/sql', 'not_succ_to_break': True},
-        {'desc': '检查主库配置的备库service是否和备库定义的service_name一致', 'key': 'ORA_DG_SERVICE', 'command': 'sqlplus -s / as sysdba <<EOF\nselect value from v\\$parameter where name=\'log_archive_dest_2\';\nEOF',
+        {'desc': '检查备库配置的主库service是否和主库定义的service_name一致', 'key': 'ORA_DG_SERVICE', 'command': 'sqlplus -s / as sysdba <<EOF\nselect value from v\\$parameter where name=\'log_archive_dest_2\';\nEOF',
          'result_regex_map': {'ORA_DG_SERVICE': '.*(SERVICE|service)='+ rltd_ora_cfg['service_name'] + '(\s|$)'}, 'accept_result': '^ORA_DG_SERVICE_RIGHT$',
          'timeout': False, 'depend_cond': {}, 'command_type': 'oracle/sql', 'not_succ_to_break': False},
         {'desc': '确认listener.ora的HOST没有用ip表示', 'key': 'LISTENER_CFG',
@@ -568,12 +572,12 @@ def check_dg_stby_oracle_status(pri_ora_cfg, stby_ora_cfg):
         {'desc': '检查数据库实例运行状态', 'key': 'DATABASE_INSTANCE_STATUS',
          'command': 'sqlplus -s / as sysdba <<EOF\nselect instance_name,status,database_status from v\\$instance;\nEOF',
          'result_regex_map': {'MOUNTED': '.*' + ora_cfg['app_name'] + '.*MOUNTED.*ACTIVE.*', 'OPEN': '.*OPEN.*ACTIVE.*', 'SHUTDOWN': '.*ORA-01034.*'},
-         'accept_result': '^OPEN$', 'timeout': False, 'depend_cond': {}, 'command_type': 'oracle/sql',
+         'accept_result': '^(OPEN|MOUNTED)$', 'timeout': False, 'depend_cond': {}, 'command_type': 'oracle/sql',
          'not_succ_to_break': True},
         {'desc': '检查oracle的database role', 'key': 'DATABASE_ROLE',
          'command': 'sqlplus -s / as sysdba <<EOF\nselect database_role from v\\$database;\nEOF',
          'result_regex_map': {'PRIMARY': '.*PRIMARY.*', 'STANDBY': '.*PHYSICAL STANDBY.*'},
-         'accept_result': '^PRIMARY$',
+         'accept_result': '^STANDBY$',
          'timeout': False, 'depend_cond': {}, 'command_type': 'oracle/sql', 'not_succ_to_break': False},
         {'desc': '检查oracle的switchover status', 'key': 'SWITCHOVER_STATUS',
          'command': 'sqlplus -s / as sysdba <<EOF\nselect switchover_status from v\\$database;\nEOF',
@@ -584,16 +588,7 @@ def check_dg_stby_oracle_status(pri_ora_cfg, stby_ora_cfg):
          'command': 'sqlplus -s / as sysdba <<EOF\nselect * from v\\$archive_gap;\nEOF',
          'result_regex_map': {'ARCHIVE_GAP_EMPTY': '.*no rows selected.*', 'ARCHIVE_GAP_NOT_EMPTY': '^((?!no rows selected).)*$'},
          'accept_result': '^ARCHIVE_GAP_EMPTY$',
-         'timeout': False, 'depend_cond': {}, 'command_type': 'oracle/sql', 'not_succ_to_break': False},
-        {'desc': '检查oracle的archive log', 'key': 'ARCHIVE_LOG',
-         'command': 'sqlplus -s / as sysdba <<EOF\nselect (select max(SEQUENCE#) from V\\$archived_log where applied=\'NO\')-(select max(SEQUENCE#) from V\\$archived_log where applied=\'YES\')  as archived_log from dual;\nEOF',
-         'result_regex_map': {'ARCHIVE_LOG_OK': '\D(0|1)$'}, 'accept_result': '^ARCHIVE_LOG_OK$',
-         'command_type': 'oracle/sql', 'timeout': False, 'depend_cond': {},
-         'not_succ_to_break': False},
-        {'desc': '检查oracle的表空间', 'key': 'TABLE_SPACE', 'command': 'sqlplus -s / as sysdba <<EOF\nselect TABLESPACE_NAME,FILE_NAME,STATUS from dba_temp_files;\nEOF',
-         'result_regex_map': {'TABLE_SPACE_OK': '.*AVAILABLE.*', 'TABLE_SPACE_ERROR': '.*ORA-01110: data file 201.*'},
-         'accept_result': '^TABLE_SPACE_OK$', 'timeout': False, 'depend_cond': {}, 'command_type': 'oracle/sql',
-         'not_succ_to_break': False}
+         'timeout': False, 'depend_cond': {}, 'command_type': 'oracle/sql', 'not_succ_to_break': False}
     ]
     check_result, conn = __create_ssh_connect(host_ip, ssh_port, ora_cfg['app_user'], ora_cfg['app_user_password'])
     item_list.append(check_result)
@@ -624,7 +619,9 @@ def check_dg_stby_oracle_status(pri_ora_cfg, stby_ora_cfg):
         dg_status_ret['comment'] = '主oracle状态检查通过'
     else:
         dg_status_ret['comment'] = err_msg
+    conn.close()
     logger.info('主oracle状态检查结果' + dg_status_ret['status'] + ':' + dg_status_ret['comment'])
+    return dg_status_ret
 
 
 def check_dg_oracle_status(pri_ora_cfg, stby_ora_cfg):
@@ -634,7 +631,9 @@ def check_dg_oracle_status(pri_ora_cfg, stby_ora_cfg):
     dg_status_ret['startTime'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
     dg_status_ret['desc'] = '检查dg oracle运行装态以及配置信息'
     dg_status_ret['comment'] = ''
+    logger.info('开始检查primary oracle的dg状态:host_ip=' + pri_ora_cfg['host_ip'] + ',host_name=' + pri_ora_cfg['host_name'])
     pri_status = check_dg_primary_oracle_status(pri_ora_cfg, stby_ora_cfg)
+    logger.info('开始检查standby oracle的dg状态:host_ip=' + stby_ora_cfg['host_ip'] + ',host_name=' + stby_ora_cfg['host_name'])
     stby_status = check_dg_stby_oracle_status(pri_ora_cfg, stby_ora_cfg)
     dg_status_ret['endTime'] = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
     dg_status_ret['pri_ora_dg_status'] = pri_status
@@ -672,5 +671,6 @@ cfg['service_name'] = ora_cfg.server_name
  [{'timeout': True, 'depend_cond': {'TERMINAL_CONSOLE': 'SUCC'}, 'result_regex_map': {'SUCC': '.*The command completed successfully.*', 'TNS_NOT_START': '.*TNS-12541.*'}, 'command': 'lsnrctl status', 'key': 'TNS_START', 'command_type': 'bash/shell', 'not_succ_to_break': True, 'desc': '检查oracle的tns服务是否启动'}]
 """
 
-test_ret = check_dg_primary_oracle_status(pri_cfg, stby_cfg)
+logger.info('$$$$$$$$$$$$开始测试$$$$$$$$$$$')
+test_ret = check_dg_oracle_status(pri_cfg, stby_cfg)
 print(test_ret)
