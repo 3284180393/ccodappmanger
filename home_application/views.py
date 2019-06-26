@@ -62,7 +62,7 @@ def get_app_pri_stby_cfg(request, platform_name, app_type):
         app_cfg['nj_agent_user'] = cfg.nj_agent_user.login_name
         app_cfg['nj_agent_user_password'] = cfg.nj_agent_user.pass_word
         app_cfg['nj_agent_user_id'] = cfg.nj_agent_user.server_user_id
-        app_cfg['avaible_ip'] = cfg.availble_ip
+        app_cfg['available'] = cfg.available_ip
         app_cfg['primary_app_cfg'] = __get_app_config(cfg.primary_app)
         app_cfg['standby_app_cfg'] = __get_app_config(cfg.standby_app)
         ret_list.append(app_cfg)
@@ -111,6 +111,6 @@ def __get_app_config(app_cfg):
     cfg['server_id'] = app_cfg.server.id
     cfg['root_user_id'] = app_cfg.root_user.id
     cfg['app_user_id'] = app_cfg.app_user.id
-    cfg['service_name'] = app_cfg.server_name
+    cfg['service_name'] = app_cfg.service_name
     cfg['ssh_port'] = app_cfg.server.ssh_port
     return cfg
